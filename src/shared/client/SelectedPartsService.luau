@@ -1,7 +1,12 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Signal = require(ReplicatedStorage.Packages.Signal)
+
 local SelectedPartsService = {
 	CurrentlySelectedParts = {},
+	SelectionUpdated = Signal.new(),
 }
 
+local partsSelectedFwSearch = {}
 local partsWithIndicators = {}
 
 function removeIndicators(part: Part)
@@ -17,56 +22,61 @@ function removeIndicators(part: Part)
 end
 
 function SelectedPartsService:UpdateSelection()
-	for part, isSelected in SelectedPartsService.CurrentlySelectedParts do
-		if isSelected and not partsWithIndicators[part] then
-			local selectionBox: SelectionBox = Instance.new("SelectionBox")
+	SelectedPartsService.CurrentlySelectedParts = {}
+	for part, isSelected in partsSelectedFwSearch do
+		if isSelected then
+			table.insert(SelectedPartsService.CurrentlySelectedParts, part)
+			if not partsWithIndicators[part] then
+				local selectionBox: SelectionBox = Instance.new("SelectionBox")
 
-			selectionBox.Parent = part
-			selectionBox.Adornee = part
+				selectionBox.Parent = part
+				selectionBox.Adornee = part
 
-			selectionBox:AddTag("selection")
+				selectionBox:AddTag("selection")
 
-			local highlight: Highlight = Instance.new("Highlight")
+				local highlight: Highlight = Instance.new("Highlight")
 
-			highlight.Adornee = part
-			highlight.Parent = part
-			highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-			highlight.FillTransparency = 1
-			highlight.OutlineColor = Color3.new(0.4, 0.623529, 0.807843)
+				highlight.Adornee = part
+				highlight.Parent = part
+				highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+				highlight.FillTransparency = 1
+				highlight.OutlineColor = Color3.new(0.4, 0.623529, 0.807843)
 
-			highlight:AddTag("selection")
+				highlight:AddTag("selection")
 
-			partsWithIndicators[part] = true
+				partsWithIndicators[part] = true
+			end
 		end
 	end
 	for part, _ in partsWithIndicators do
-		if not SelectedPartsService.CurrentlySelectedParts[part] then
+		if not partsSelectedFwSearch[part] then
 			removeIndicators(part)
 		end
 	end
+	SelectedPartsService.SelectionUpdated:Fire()
 end
 
 function SelectedPartsService:TogglePartSelection(part: Part)
-	if SelectedPartsService.CurrentlySelectedParts[part] == true then
-		SelectedPartsService.CurrentlySelectedParts[part] = nil
+	if partsSelectedFwSearch[part] == true then
+		partsSelectedFwSearch[part] = nil
 	else
-		SelectedPartsService.CurrentlySelectedParts[part] = true
+		partsSelectedFwSearch[part] = true
 	end
 end
 
 function SelectedPartsService:ClearSelection()
-	for part, isSelected in SelectedPartsService.CurrentlySelectedParts do
+	for part, isSelected in partsSelectedFwSearch do
 		if not isSelected then
 			continue
 		end
 
-		SelectedPartsService.CurrentlySelectedParts[part] = nil
+		partsSelectedFwSearch[part] = nil
 		removeIndicators(part)
 	end
 end
 
 function SelectedPartsService:IsSelected(part: Part)
-	return SelectedPartsService.CurrentlySelectedParts[part] or false
+	return partsSelectedFwSearch[part] or false
 end
 
 return SelectedPartsService

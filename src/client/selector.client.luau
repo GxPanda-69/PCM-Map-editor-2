@@ -14,5 +14,9 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 		return
 	end
 
+	if not UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+		SelectedPartsService:ClearSelection()
+	end
 	SelectedPartsService:TogglePartSelection(Mouse.Target)
+	SelectedPartsService:UpdateSelection()
 end)
